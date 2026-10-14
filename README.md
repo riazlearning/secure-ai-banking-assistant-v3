@@ -7,8 +7,8 @@ Install dependencies with `uv sync`. Configure the LLM provider and API key in
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5433
 POSTGRES_DB=banking_db
-POSTGRES_USER=banking
-POSTGRES_PASSWORD=admin123
+POSTGRES_USER= 
+POSTGRES_PASSWORD= 
 ```
 
 Start the persistent local database and then the API:
