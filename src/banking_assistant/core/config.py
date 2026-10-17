@@ -16,7 +16,8 @@ class Settings(BaseSettings):
 
     groq_api_key: str = Field(default="", repr=False)
     groq_model: str = ""
-    max_tokens: int = Field(default=100, gt=0)
+    max_tokens: int
+    mcp_enabled: bool = False
 
     postgres_host: str = "localhost"
     postgres_port: int = Field(default=5433, gt=0, le=65535)

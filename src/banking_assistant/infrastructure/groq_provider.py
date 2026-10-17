@@ -3,12 +3,7 @@ from langchain_groq import ChatGroq
 
 
 class GroqLLMProvider:
-    def __init__(
-        self,
-        api_key: str,
-        model: str,
-        max_tokens: int = 100,
-    ):
+    def __init__(self, api_key: str, model: str, max_tokens: int):
         if not api_key:
             raise ValueError("Groq API key is required")
 
@@ -26,5 +21,5 @@ class GroqLLMProvider:
             temperature=0,
             timeout=20,
             max_retries=0,
-            max_tokens=100,
+            max_tokens=self.max_tokens,
         )

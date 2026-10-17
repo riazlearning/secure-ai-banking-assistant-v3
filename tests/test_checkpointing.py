@@ -13,14 +13,19 @@ from banking_assistant.infrastructure.checkpointer import create_checkpointer
 from banking_assistant.services.chat_service import ChatService
 
 
+class ToolBindableFakeModel(FakeListChatModel):
+    def bind_tools(self, tools, **kwargs):
+        return self
+
+
 def test_conversation_history_and_thread_isolation():
     async def run():
         saver = InMemorySaver()
-        agent = BankingAgent(FakeListChatModel(responses=["one", "two", "three"]), saver)
+        agent = BankingAgent(ToolBindableFakeModel(responses=["one", "two", "three"]), saver)
         service = ChatService(agent)
         assert await service.ask("first", "thread-a") == "one"
         assert await service.ask("second", "thread-a") == "two"
-        resumed = BankingAgent(FakeListChatModel(responses=["resumed"]), saver)
+        resumed = BankingAgent(ToolBindableFakeModel(responses=["resumed"]), saver)
         assert await ChatService(resumed).ask("third", "thread-a") == "resumed"
         state = await resumed.graph.aget_state({"configurable": {"thread_id": "thread-a"}})
         assert [m.content for m in state.values["messages"] if isinstance(m, HumanMessage)] == [
@@ -69,8 +74,12 @@ def test_api_lifespan_cleans_up_agent():
             closed.append(True)
 
     async def run():
-        with patch("banking_assistant.main.create_checkpointer", storage):
-            with patch("banking_assistant.main.get_chat_model", return_value=FakeListChatModel(responses=["answer"])):
+        with (
+            patch("banking_assistant.main.create_checkpointer", storage),
+            patch("banking_assistant.main.get_settings") as settings,
+        ):
+            settings.return_value.mcp_enabled = False
+            with patch("banking_assistant.main.get_chat_model", return_value=ToolBindableFakeModel(responses=["answer"])):
                 async with lifespan(app):
                     assert app.state.banking_agent.checkpointer is saver
                 assert not hasattr(app.state, "banking_agent")
